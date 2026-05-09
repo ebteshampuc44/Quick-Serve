@@ -765,6 +765,9 @@ fun SearchBarSection(query: String, onChange: (String) -> Unit, modifier: Modifi
         onValueChange = onChange,
         modifier = modifier.fillMaxWidth(),
         placeholder = { Text("Search for services...", color = TextGray) },
+        textStyle = LocalTextStyle.current.copy(
+            color = Color.Black  // This makes the typed text black
+        ),
         leadingIcon = {
             Icon(Icons.Filled.Search, contentDescription = null, tint = TextGray)
         },
@@ -781,7 +784,9 @@ fun SearchBarSection(query: String, onChange: (String) -> Unit, modifier: Modifi
             focusedBorderColor = OrangePrimary,
             unfocusedBorderColor = Color(0xFFE8E8E8),
             focusedContainerColor = White,
-            unfocusedContainerColor = White
+            unfocusedContainerColor = White,
+            focusedTextColor = Color.Black,      // When text field is focused
+            unfocusedTextColor = Color.Black     // When text field is unfocused
         ),
         singleLine = true
     )
