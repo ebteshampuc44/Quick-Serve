@@ -53,6 +53,7 @@ private val TextGray = Color(0xFF6B7280)
 private val LightGray = Color(0xFFF0F2F5)
 private val White = Color.White
 private val Background = Color(0xFFFAFAFA)
+private val BlackText = Color(0xFF000000)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,7 +113,7 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                 val base64Image = uriToBase64(imageUri)
                 if (base64Image != null) {
                     val userId = user.uid
-                    val userRef = database.child("users").child(userId)
+                    val userRef = database.child(Constants.USERS).child(userId)
                     userRef.child("profileImageBase64").setValue(base64Image).await()
 
                     profileImageBase64 = base64Image
@@ -154,9 +155,9 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
     LaunchedEffect(Unit) {
         currentUser?.let { user ->
             val userId = user.uid
-            val userRef = database.child("users").child(userId)
+            val userRef = database.child(Constants.USERS).child(userId)
 
-            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            userRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
                         val data = mutableMapOf<String, Any?>()
@@ -216,7 +217,7 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
             isUpdating = true
             try {
                 val userId = user.uid
-                val userRef = database.child("users").child(userId)
+                val userRef = database.child(Constants.USERS).child(userId)
                 userRef.child("fullName").setValue(newName).await()
 
                 val profileUpdates = UserProfileChangeRequest.Builder()
@@ -241,7 +242,7 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
             isUpdating = true
             try {
                 val userId = user.uid
-                val userRef = database.child("users").child(userId)
+                val userRef = database.child(Constants.USERS).child(userId)
                 userRef.child("phone").setValue(newPhone).await()
 
                 userData = userData?.toMutableMap()?.apply { put("phone", newPhone) }
@@ -269,7 +270,7 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                 user.verifyBeforeUpdateEmail(newEmail).await()
 
                 val userId = user.uid
-                val userRef = database.child("users").child(userId)
+                val userRef = database.child(Constants.USERS).child(userId)
                 userRef.child("email").setValue(newEmail).await()
 
                 Toast.makeText(context, "Verification sent to $newEmail", Toast.LENGTH_LONG).show()
@@ -568,8 +569,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                     label = { Text("Full Name") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
+                    textStyle = LocalTextStyle.current.copy(color = BlackText),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = OrangePrimary
+                        focusedBorderColor = OrangePrimary,
+                        focusedTextColor = BlackText,
+                        unfocusedTextColor = BlackText
                     )
                 )
             },
@@ -607,8 +611,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                     placeholder = { Text("+880 1XXX-XXXXXX") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
+                    textStyle = LocalTextStyle.current.copy(color = BlackText),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = OrangePrimary
+                        focusedBorderColor = OrangePrimary,
+                        focusedTextColor = BlackText,
+                        unfocusedTextColor = BlackText
                     )
                 )
             },
@@ -652,8 +659,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                         label = { Text("New Email") },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
+                        textStyle = LocalTextStyle.current.copy(color = BlackText),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary
+                            focusedBorderColor = OrangePrimary,
+                            focusedTextColor = BlackText,
+                            unfocusedTextColor = BlackText
                         )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -672,8 +682,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                         },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
+                        textStyle = LocalTextStyle.current.copy(color = BlackText),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary
+                            focusedBorderColor = OrangePrimary,
+                            focusedTextColor = BlackText,
+                            unfocusedTextColor = BlackText
                         )
                     )
                 }
@@ -724,8 +737,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                         },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
+                        textStyle = LocalTextStyle.current.copy(color = BlackText),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary
+                            focusedBorderColor = OrangePrimary,
+                            focusedTextColor = BlackText,
+                            unfocusedTextColor = BlackText
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -745,8 +761,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                         },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
+                        textStyle = LocalTextStyle.current.copy(color = BlackText),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary
+                            focusedBorderColor = OrangePrimary,
+                            focusedTextColor = BlackText,
+                            unfocusedTextColor = BlackText
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -758,8 +777,11 @@ fun ProfileScreen(navController: NavController, padding: PaddingValues) {
                         visualTransformation = if (showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
+                        textStyle = LocalTextStyle.current.copy(color = BlackText),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary
+                            focusedBorderColor = OrangePrimary,
+                            focusedTextColor = BlackText,
+                            unfocusedTextColor = BlackText
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )

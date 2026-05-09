@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.database.FirebaseDatabase
 
 // Color palette
 private val PrimaryBlue = Color(0xFF1E88E5)
@@ -39,6 +42,10 @@ private val LightGray = Color(0xFFF0F2F5)
 private val White = Color.White
 private val BlackText = Color(0xFF000000)
 
+// Admin email (no verification required)
+private val ADMIN_EMAIL = "admin@quickserve.com"
+private val ADMIN_PASSWORD = "admin123456"
+
 @Composable
 fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
@@ -46,6 +53,7 @@ fun LoginScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(false) }
     var showPassword by remember { mutableStateOf(false) }
     var showResendDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     // Forgot Password Dialog states
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
@@ -54,21 +62,124 @@ fun LoginScreen(navController: NavController) {
 
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
+    val database = FirebaseDatabase.getInstance().reference
 
-    // Check if user is already logged in and verified
+    // Function to check if user is admin
+    fun isAdminUser(email: String): Boolean {
+        return email == ADMIN_EMAIL
+    }
+
+    // Check if user is already logged in
     LaunchedEffect(Unit) {
         val currentUser = auth.currentUser
-        if (currentUser != null && currentUser.isEmailVerified) {
-            navController.navigate("home") {
-                popUpTo("login") { inclusive = true }
+        if (currentUser != null) {
+            if (isAdminUser(currentUser.email ?: "")) {
+                // Admin - no verification needed
+                navController.navigate("adminApplications") {
+                    popUpTo("login") { inclusive = true }
+                }
+            } else if (currentUser.isEmailVerified) {
+                // Normal user with verified email
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                // Normal user but email not verified
+                Toast.makeText(
+                    context,
+                    "Please verify your email before logging in",
+                    Toast.LENGTH_LONG
+                ).show()
+                auth.signOut()
             }
-        } else if (currentUser != null && !currentUser.isEmailVerified) {
-            Toast.makeText(
-                context,
-                "Please verify your email before logging in",
-                Toast.LENGTH_LONG
-            ).show()
-            auth.signOut()
+        }
+    }
+
+    fun performLogin() {
+        when {
+            email.isBlank() -> {
+                Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
+            }
+            password.isBlank() -> {
+                Toast.makeText(context, "Please enter your password", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                isLoading = true
+                errorMessage = null
+
+                // Check for admin login first (no verification needed)
+                if (email == ADMIN_EMAIL && password == ADMIN_PASSWORD) {
+                    // Try to sign in with Firebase first
+                    auth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            isLoading = false
+                            if (task.isSuccessful) {
+                                Toast.makeText(
+                                    context,
+                                    "Welcome Admin!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navController.navigate("adminApplications") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            } else {
+                                // If Firebase doesn't have this user, create it
+                                auth.createUserWithEmailAndPassword(email, password)
+                                    .addOnCompleteListener { createTask ->
+                                        if (createTask.isSuccessful) {
+                                            // Admin account created successfully, no need to send verification email
+                                            Toast.makeText(
+                                                context,
+                                                "Admin account created! Welcome!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            navController.navigate("adminApplications") {
+                                                popUpTo("login") { inclusive = true }
+                                            }
+                                        } else {
+                                            errorMessage = createTask.exception?.message ?: "Admin login failed"
+                                            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                            }
+                        }
+                } else {
+                    // Normal user login (requires email verification)
+                    auth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            isLoading = false
+                            if (task.isSuccessful) {
+                                val user = auth.currentUser
+                                if (user?.isEmailVerified == true) {
+                                    Toast.makeText(
+                                        context,
+                                        "Welcome ${user.email?.split("@")?.get(0) ?: "back"}!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Please verify your email address before logging in. Check your inbox for verification link.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    auth.signOut()
+                                    showResendDialog = true
+                                }
+                            } else {
+                                val exception = task.exception
+                                errorMessage = when (exception) {
+                                    is FirebaseAuthInvalidUserException -> "No account found with this email. Please sign up first."
+                                    is FirebaseAuthInvalidCredentialsException -> "Wrong password. Please try again."
+                                    else -> exception?.message ?: "Login failed. Please check your credentials."
+                                }
+                                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                }
+            }
         }
     }
 
@@ -171,12 +282,33 @@ fun LoginScreen(navController: NavController) {
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        // Show error message if any
+                        if (errorMessage != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFFFEBEE)
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = errorMessage!!,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFFF44336),
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         // Email Field
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { email = it },
+                            onValueChange = {
+                                email = it
+                                errorMessage = null
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Email Address", color = GrayText) },
                             leadingIcon = {
@@ -189,6 +321,7 @@ fun LoginScreen(navController: NavController) {
                             placeholder = { Text("you@example.com", color = GrayText) },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
+                            isError = errorMessage != null,
                             textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = PrimaryBlue,
@@ -207,7 +340,10 @@ fun LoginScreen(navController: NavController) {
                         // Password Field
                         OutlinedTextField(
                             value = password,
-                            onValueChange = { password = it },
+                            onValueChange = {
+                                password = it
+                                errorMessage = null
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Password", color = GrayText) },
                             leadingIcon = {
@@ -229,6 +365,7 @@ fun LoginScreen(navController: NavController) {
                             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
+                            isError = errorMessage != null,
                             textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = PrimaryBlue,
@@ -265,50 +402,7 @@ fun LoginScreen(navController: NavController) {
 
                         // Login Button
                         Button(
-                            onClick = {
-                                when {
-                                    email.isBlank() -> {
-                                        Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
-                                    }
-                                    password.isBlank() -> {
-                                        Toast.makeText(context, "Please enter your password", Toast.LENGTH_SHORT).show()
-                                    }
-                                    else -> {
-                                        isLoading = true
-                                        auth.signInWithEmailAndPassword(email, password)
-                                            .addOnCompleteListener { task ->
-                                                isLoading = false
-                                                if (task.isSuccessful) {
-                                                    val user = auth.currentUser
-                                                    if (user?.isEmailVerified == true) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Welcome ${user.email?.split("@")?.get(0) ?: "back"}!",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                        navController.navigate("home") {
-                                                            popUpTo("login") { inclusive = true }
-                                                        }
-                                                    } else {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Please verify your email address before logging in. Check your inbox for verification link.",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                        auth.signOut()
-                                                        showResendDialog = true
-                                                    }
-                                                } else {
-                                                    Toast.makeText(
-                                                        context,
-                                                        task.exception?.message ?: "Login failed. Please check your credentials.",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
-                                            }
-                                    }
-                                }
-                            },
+                            onClick = { performLogin() },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
@@ -388,6 +482,43 @@ fun LoginScreen(navController: NavController) {
                                 }
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Admin Login Hint
+                        Divider(
+                            modifier = Modifier.padding(top = 8.dp),
+                            thickness = 0.5.dp,
+                            color = LightGray
+                        )
+
+                        Column(
+                            modifier = Modifier.padding(top = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.AdminPanelSettings,
+                                    contentDescription = null,
+                                    tint = GrayText,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Admin Login: admin@quickserve.com",
+                                    fontSize = 11.sp,
+                                    color = GrayText
+                                )
+                            }
+                            Text(
+                                text = "Password: admin123456 (No verification required)",
+                                fontSize = 10.sp,
+                                color = GrayText.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
 
@@ -396,7 +527,7 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
-    // Resend Verification Dialog
+    // Resend Verification Dialog (only for normal users)
     if (showResendDialog) {
         AlertDialog(
             onDismissRequest = { showResendDialog = false },

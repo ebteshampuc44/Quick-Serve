@@ -1,9 +1,18 @@
 package com.example.quickserve
 
+import android.Manifest
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
+import android.util.Base64
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,15 +24,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.ByteArrayOutputStream
 
 private val OrangePrimary = Color(0xFFFF7622)
 private val OrangeLight = Color(0xFFFFF0E8)
@@ -32,13 +44,14 @@ private val TextGray = Color(0xFF6B7280)
 private val LightGray = Color(0xFFF0F2F5)
 private val White = Color.White
 private val Background = Color(0xFFFAFAFA)
+private val BlackText = Color(0xFF000000)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplyWorkerScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
-    val db = FirebaseFirestore.getInstance()
+    val database = FirebaseDatabase.getInstance().reference
     val scope = rememberCoroutineScope()
 
     // Form states
@@ -51,31 +64,113 @@ fun ApplyWorkerScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
+    // Profile image states
+    var profileImageBase64 by remember { mutableStateOf<String?>(null) }
+    var isUploadingImage by remember { mutableStateOf(false) }
+
     // Service types list
-    val serviceTypes = listOf(
-        "Plumber",
-        "Electrician",
-        "AC & Appliance",
-        "Cleaning",
-        "Carpenter",
-        "Women Salon",
-        "Men Salon",
-        "Pest Control"
-    )
+    val serviceTypes = Constants.SERVICE_CATEGORIES
 
     // Experience options
-    val experienceOptions = listOf(
-        "1 year",
-        "2 years",
-        "3 years",
-        "4 years",
-        "5 years",
-        "6+ years"
-    )
+    val experienceOptions = listOf("1 year", "2 years", "3 years", "4 years", "5 years", "6+ years")
 
-    // Get current user email
+    // Get current user info
     val currentUser = auth.currentUser
     val userEmail = currentUser?.email ?: ""
+
+    // Load user's data from database
+    LaunchedEffect(Unit) {
+        if (currentUser != null) {
+            val userRef = database.child(Constants.USERS).child(currentUser.uid)
+            try {
+                val snapshot = userRef.get().await()
+                if (snapshot.exists()) {
+                    val savedName = snapshot.child("fullName").getValue(String::class.java)
+                    if (!savedName.isNullOrEmpty()) {
+                        fullName = savedName
+                    }
+                    val savedPhone = snapshot.child("phone").getValue(String::class.java)
+                    if (!savedPhone.isNullOrEmpty()) {
+                        phoneNumber = savedPhone
+                    }
+                    val savedImage = snapshot.child("profileImageBase64").getValue(String::class.java)
+                    if (!savedImage.isNullOrEmpty()) {
+                        profileImageBase64 = savedImage
+                    }
+                }
+            } catch (e: Exception) {
+                // If can't load, use empty string
+            }
+        }
+    }
+
+    // Function to convert URI to Base64
+    fun uriToBase64(uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, outputStream)
+            val byteArray = outputStream.toByteArray()
+            Base64.encodeToString(byteArray, Base64.DEFAULT)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    // Function to upload profile image
+    fun uploadProfileImage(imageUri: Uri) {
+        scope.launch {
+            isUploadingImage = true
+            try {
+                val base64Image = uriToBase64(imageUri)
+                if (base64Image != null) {
+                    profileImageBase64 = base64Image
+                    Toast.makeText(context, "Profile image selected!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Failed to process image", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                isUploadingImage = false
+            }
+        }
+    }
+
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            uploadProfileImage(it)
+        }
+    }
+
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            imagePickerLauncher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Storage permission required", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Helper to decode Base64 to ImageBitmap
+    fun decodeBase64ToImageBitmap(base64: String): androidx.compose.ui.graphics.ImageBitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
+            val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+            bitmap.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     fun submitApplication() {
         when {
@@ -103,8 +198,11 @@ fun ApplyWorkerScreen(navController: NavController) {
             else -> {
                 isLoading = true
 
-                val applicationData = hashMapOf(
-                    "userId" to currentUser?.uid,
+                val applicationId = database.child(Constants.WORKER_APPLICATIONS).push().key ?: ""
+
+                val applicationData = mutableMapOf<String, Any>(
+                    "id" to applicationId,
+                    "userId" to (currentUser?.uid ?: ""),
                     "userEmail" to userEmail,
                     "fullName" to fullName,
                     "phoneNumber" to phoneNumber,
@@ -112,15 +210,27 @@ fun ApplyWorkerScreen(navController: NavController) {
                     "experience" to experience,
                     "location" to location,
                     "chargePerHour" to chargePerHour.toInt(),
-                    "status" to "pending",
+                    "status" to Constants.STATUS_PENDING,
                     "appliedAt" to System.currentTimeMillis()
                 )
 
-                db.collection("worker_applications")
-                    .add(applicationData)
+                // Add profile image if available
+                if (!profileImageBase64.isNullOrEmpty()) {
+                    applicationData["profileImageBase64"] = profileImageBase64!!
+                }
+
+                database.child(Constants.WORKER_APPLICATIONS)
+                    .child(applicationId)
+                    .setValue(applicationData)
                     .addOnSuccessListener {
                         isLoading = false
                         showSuccessDialog = true
+
+                        Toast.makeText(
+                            context,
+                            "Applied as $selectedServiceType! Waiting for admin approval.",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                     .addOnFailureListener { e ->
                         isLoading = false
@@ -171,7 +281,6 @@ fun ApplyWorkerScreen(navController: NavController) {
                     .padding(bottom = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header Icon
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Box(
@@ -207,7 +316,6 @@ fun ApplyWorkerScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Application Form Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
@@ -232,6 +340,74 @@ fun ApplyWorkerScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // Profile Image Section
+                        Text(
+                            text = "Profile Picture",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextDark,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .background(OrangeLight)
+                                .clickable {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                    } else {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isUploadingImage) {
+                                CircularProgressIndicator(color = OrangePrimary)
+                            } else if (!profileImageBase64.isNullOrEmpty()) {
+                                val imageBitmap = decodeBase64ToImageBitmap(profileImageBase64!!)
+                                if (imageBitmap != null) {
+                                    androidx.compose.foundation.Image(
+                                        bitmap = imageBitmap,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Filled.Person,
+                                        contentDescription = "Add Photo",
+                                        tint = OrangePrimary,
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                }
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Filled.CameraAlt,
+                                        contentDescription = "Add Photo",
+                                        tint = OrangePrimary,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Text(
+                                        text = "Add Photo",
+                                        fontSize = 10.sp,
+                                        color = TextGray
+                                    )
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = "Tap to add profile picture (optional)",
+                            fontSize = 11.sp,
+                            color = TextGray,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                        )
+
                         // Full Name Field
                         OutlinedTextField(
                             value = fullName,
@@ -244,10 +420,14 @@ fun ApplyWorkerScreen(navController: NavController) {
                             placeholder = { Text("Enter your full name") },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
+                            textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = OrangePrimary,
-                                unfocusedBorderColor = LightGray
-                            )
+                                unfocusedBorderColor = LightGray,
+                                focusedTextColor = BlackText,
+                                unfocusedTextColor = BlackText
+                            ),
+                            enabled = false  // Name from profile, cannot edit
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -264,9 +444,12 @@ fun ApplyWorkerScreen(navController: NavController) {
                             placeholder = { Text("+880 1XXX-XXXXXX") },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
+                            textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = OrangePrimary,
-                                unfocusedBorderColor = LightGray
+                                unfocusedBorderColor = LightGray,
+                                focusedTextColor = BlackText,
+                                unfocusedTextColor = BlackText
                             )
                         )
 
@@ -292,22 +475,33 @@ fun ApplyWorkerScreen(navController: NavController) {
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedService) },
                                 shape = RoundedCornerShape(12.dp),
+                                textStyle = LocalTextStyle.current.copy(color = BlackText),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = OrangePrimary,
-                                    unfocusedBorderColor = LightGray
+                                    unfocusedBorderColor = LightGray,
+                                    focusedTextColor = BlackText,
+                                    unfocusedTextColor = BlackText
                                 )
                             )
                             ExposedDropdownMenu(
                                 expanded = expandedService,
-                                onDismissRequest = { expandedService = false }
+                                onDismissRequest = { expandedService = false },
+                                modifier = Modifier.background(White)
                             ) {
                                 serviceTypes.forEach { service ->
                                     DropdownMenuItem(
-                                        text = { Text(service) },
+                                        text = {
+                                            Text(
+                                                text = service,
+                                                color = BlackText,
+                                                fontSize = 14.sp
+                                            )
+                                        },
                                         onClick = {
                                             selectedServiceType = service
                                             expandedService = false
-                                        }
+                                        },
+                                        modifier = Modifier.background(White)
                                     )
                                 }
                             }
@@ -335,22 +529,33 @@ fun ApplyWorkerScreen(navController: NavController) {
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedExp) },
                                 shape = RoundedCornerShape(12.dp),
+                                textStyle = LocalTextStyle.current.copy(color = BlackText),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = OrangePrimary,
-                                    unfocusedBorderColor = LightGray
+                                    unfocusedBorderColor = LightGray,
+                                    focusedTextColor = BlackText,
+                                    unfocusedTextColor = BlackText
                                 )
                             )
                             ExposedDropdownMenu(
                                 expanded = expandedExp,
-                                onDismissRequest = { expandedExp = false }
+                                onDismissRequest = { expandedExp = false },
+                                modifier = Modifier.background(White)
                             ) {
                                 experienceOptions.forEach { exp ->
                                     DropdownMenuItem(
-                                        text = { Text(exp) },
+                                        text = {
+                                            Text(
+                                                text = exp,
+                                                color = BlackText,
+                                                fontSize = 14.sp
+                                            )
+                                        },
                                         onClick = {
                                             experience = exp
                                             expandedExp = false
-                                        }
+                                        },
+                                        modifier = Modifier.background(White)
                                     )
                                 }
                             }
@@ -370,9 +575,12 @@ fun ApplyWorkerScreen(navController: NavController) {
                             placeholder = { Text("City, Area") },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
+                            textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = OrangePrimary,
-                                unfocusedBorderColor = LightGray
+                                unfocusedBorderColor = LightGray,
+                                focusedTextColor = BlackText,
+                                unfocusedTextColor = BlackText
                             )
                         )
 
@@ -390,9 +598,12 @@ fun ApplyWorkerScreen(navController: NavController) {
                             placeholder = { Text("e.g., 500") },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
+                            textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = OrangePrimary,
-                                unfocusedBorderColor = LightGray
+                                unfocusedBorderColor = LightGray,
+                                focusedTextColor = BlackText,
+                                unfocusedTextColor = BlackText
                             )
                         )
 

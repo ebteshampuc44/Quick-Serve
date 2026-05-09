@@ -58,16 +58,24 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-database-ktx:21.0.0")  // Realtime Database
+    implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     implementation("com.google.firebase:firebase-storage-ktx")
 
     // Google Play Services
     implementation("com.google.android.gms:play-services-auth:21.3.0")
 
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Google Maps Compose
+    implementation("com.google.maps.android:maps-compose:4.3.0")
+
+    // Accompanist Permissions
+    implementation(libs.accompanist.permissions)
+
     // Image Loading (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
-    // Storage dependency already added
-    implementation("com.google.firebase:firebase-storage-ktx")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
