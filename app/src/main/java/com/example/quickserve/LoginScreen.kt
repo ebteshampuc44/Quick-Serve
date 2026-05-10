@@ -30,12 +30,11 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.database.FirebaseDatabase
 
-// Color palette
-private val PrimaryBlue = Color(0xFF1E88E5)
-private val PrimaryDark = Color(0xFF1565C0)
-private val LightBlue = Color(0xFFE3F2FD)
-private val LightBg = Color(0xFFF5F9FF)
-private val Orange = Color(0xFFFF6B35)
+// Color palette - Orange & White Theme
+private val PrimaryOrange = Color(0xFFFF6B35)      // Main Orange
+private val PrimaryDarkOrange = Color(0xFFE55A2B)  // Darker Orange
+private val LightOrange = Color(0xFFFFF0EB)        // Very Light Orange for backgrounds
+private val LightBg = Color(0xFFFFF9F5)            // Warm light background
 private val DarkText = Color(0xFF1A1A2E)
 private val GrayText = Color(0xFF6B7280)
 private val LightGray = Color(0xFFF0F2F5)
@@ -209,14 +208,14 @@ fun LoginScreen(navController: NavController) {
             ) {
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Logo Section
+                // Logo Section - Orange Gradient
                 Box(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(PrimaryBlue, PrimaryDark)
+                                colors = listOf(PrimaryOrange, PrimaryDarkOrange)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -235,7 +234,7 @@ fun LoginScreen(navController: NavController) {
                     text = "QuickServe",
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
+                    color = PrimaryOrange,
                     letterSpacing = 0.5.sp
                 )
 
@@ -248,7 +247,7 @@ fun LoginScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Service Icons Section
+                // Service Icons Section - Updated with Light Orange background
                 ServiceIconSection()
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -302,7 +301,7 @@ fun LoginScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Email Field
+                        // Email Field - Orange focus color
                         OutlinedTextField(
                             value = email,
                             onValueChange = {
@@ -315,7 +314,7 @@ fun LoginScreen(navController: NavController) {
                                 Icon(
                                     Icons.Default.Email,
                                     contentDescription = null,
-                                    tint = PrimaryBlue
+                                    tint = PrimaryOrange
                                 )
                             },
                             placeholder = { Text("you@example.com", color = GrayText) },
@@ -324,11 +323,11 @@ fun LoginScreen(navController: NavController) {
                             isError = errorMessage != null,
                             textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 unfocusedLabelColor = GrayText,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
@@ -337,7 +336,7 @@ fun LoginScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Password Field
+                        // Password Field - Orange focus color
                         OutlinedTextField(
                             value = password,
                             onValueChange = {
@@ -350,7 +349,7 @@ fun LoginScreen(navController: NavController) {
                                 Icon(
                                     Icons.Default.Lock,
                                     contentDescription = null,
-                                    tint = PrimaryBlue
+                                    tint = PrimaryOrange
                                 )
                             },
                             trailingIcon = {
@@ -368,11 +367,11 @@ fun LoginScreen(navController: NavController) {
                             isError = errorMessage != null,
                             textStyle = LocalTextStyle.current.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 unfocusedLabelColor = GrayText,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
@@ -381,14 +380,14 @@ fun LoginScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Forgot Password
+                        // Forgot Password - Orange color
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
                             Text(
                                 text = "Forgot Password?",
-                                color = Orange,
+                                color = PrimaryOrange,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable {
@@ -400,7 +399,7 @@ fun LoginScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Login Button
+                        // Login Button - Orange
                         Button(
                             onClick = { performLogin() },
                             modifier = Modifier
@@ -408,8 +407,8 @@ fun LoginScreen(navController: NavController) {
                                 .height(56.dp),
                             shape = RoundedCornerShape(18.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryBlue,
-                                disabledContainerColor = PrimaryBlue.copy(alpha = 0.6f)
+                                containerColor = PrimaryOrange,
+                                disabledContainerColor = PrimaryOrange.copy(alpha = 0.6f)
                             ),
                             enabled = !isLoading
                         ) {
@@ -463,7 +462,7 @@ fun LoginScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Sign Up Link
+                        // Sign Up Link - Orange
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -474,7 +473,7 @@ fun LoginScreen(navController: NavController) {
                             )
                             Text(
                                 text = "Sign Up",
-                                color = Orange,
+                                color = PrimaryOrange,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 modifier = Modifier.clickable {
@@ -485,7 +484,7 @@ fun LoginScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Admin Login Hint
+                        // Admin Login Hint - Orange accent
                         Divider(
                             modifier = Modifier.padding(top = 8.dp),
                             thickness = 0.5.dp,
@@ -503,7 +502,7 @@ fun LoginScreen(navController: NavController) {
                                 Icon(
                                     Icons.Default.AdminPanelSettings,
                                     contentDescription = null,
-                                    tint = GrayText,
+                                    tint = PrimaryOrange,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -536,7 +535,7 @@ fun LoginScreen(navController: NavController) {
                     text = "Email Not Verified",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Orange
+                    color = PrimaryOrange
                 )
             },
             text = {
@@ -576,7 +575,7 @@ fun LoginScreen(navController: NavController) {
                             }
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = PrimaryBlue
+                        contentColor = PrimaryOrange
                     )
                 ) {
                     Text("Resend Email", fontWeight = FontWeight.Bold)
@@ -608,7 +607,7 @@ fun LoginScreen(navController: NavController) {
                     text = "Reset Password",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Orange
+                    color = PrimaryOrange
                 )
             },
             text = {
@@ -626,13 +625,13 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Email Address", color = GrayText) },
                         leadingIcon = {
-                            Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryBlue)
+                            Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryOrange)
                         },
                         placeholder = { Text("you@example.com") },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryBlue,
+                            focusedBorderColor = PrimaryOrange,
                             unfocusedBorderColor = LightGray
                         )
                     )
@@ -679,7 +678,7 @@ fun LoginScreen(navController: NavController) {
                         }
                     },
                     enabled = !isResetLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -764,7 +763,7 @@ fun ServiceCircle(
         modifier = Modifier
             .size(80.dp)
             .clip(CircleShape),
-        color = LightBlue,
+        color = LightOrange,
         shadowElevation = 2.dp
     ) {
         Column(
@@ -777,7 +776,7 @@ fun ServiceCircle(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = PrimaryBlue,
+                tint = PrimaryOrange,
                 modifier = Modifier.size(28.dp)
             )
             Text(
