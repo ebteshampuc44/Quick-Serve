@@ -584,7 +584,7 @@ fun HomeHeader(
     isAdmin: Boolean,
     navController: NavController
 ) {
-    var unreadNotificationCount by remember { mutableStateOf(0) }
+    var unreadNotificationCount by remember { mutableIntStateOf(0) }
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
@@ -785,18 +785,8 @@ fun SearchBarSection(query: String, onChange: (String) -> Unit, modifier: Modifi
             unfocusedBorderColor = Color(0xFFE8E8E8),
             focusedContainerColor = White,
             unfocusedContainerColor = White,
-<<<<<<< HEAD
             focusedTextColor = Color.Black,
             unfocusedTextColor = Color.Black
-=======
-<<<<<<< HEAD
-            focusedTextColor = Color.Black,      // When text field is focused
-            unfocusedTextColor = Color.Black     // When text field is unfocused
-=======
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black
->>>>>>> de2d189 (update project)
->>>>>>> 9d1af91a54fbe5428f2be8f0871f6412ab6fc07d
         ),
         singleLine = true
     )
