@@ -29,11 +29,11 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.text.TextStyle
 import com.google.firebase.database.FirebaseDatabase
 
-private val PrimaryBlue = Color(0xFF1E88E5)
-private val PrimaryDark = Color(0xFF1565C0)
-private val LightBlue = Color(0xFFE3F2FD)
-private val LightBg = Color(0xFFF5F9FF)
-private val Orange = Color(0xFFFF6B35)
+// Color palette - Orange & White Theme
+private val PrimaryOrange = Color(0xFFFF6B35)      // Main Orange
+private val PrimaryDarkOrange = Color(0xFFE55A2B)  // Darker Orange
+private val LightOrange = Color(0xFFFFF0EB)        // Very Light Orange for backgrounds
+private val LightBg = Color(0xFFFFF9F5)            // Warm light background
 private val DarkText = Color(0xFF1A1A2E)
 private val GrayText = Color(0xFF6B7280)
 private val LightGray = Color(0xFFF0F2F5)
@@ -83,13 +83,14 @@ fun SignupScreen(navController: NavController) {
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // Logo Section - Orange Gradient
                 Box(
                     modifier = Modifier
                         .size(70.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(PrimaryBlue, PrimaryDark)
+                                colors = listOf(PrimaryOrange, PrimaryDarkOrange)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -108,7 +109,7 @@ fun SignupScreen(navController: NavController) {
                     text = "QuickServe",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
+                    color = PrimaryOrange,
                     letterSpacing = 0.5.sp
                 )
 
@@ -154,24 +155,25 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(28.dp))
 
+                        // Full Name Field - Orange focus
                         OutlinedTextField(
                             value = fullName,
                             onValueChange = { fullName = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Full Name", color = GrayText) },
                             leadingIcon = {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlue)
+                                Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryOrange)
                             },
                             placeholder = { Text("John Doe", color = GrayText) },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             textStyle = TextStyle.Default.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 unfocusedLabelColor = GrayText,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
@@ -180,24 +182,25 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Email Field - Orange focus
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Email Address", color = GrayText) },
                             leadingIcon = {
-                                Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryBlue)
+                                Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryOrange)
                             },
                             placeholder = { Text("you@example.com", color = GrayText) },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             textStyle = TextStyle.Default.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 unfocusedLabelColor = GrayText,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
@@ -206,24 +209,25 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Phone Field - Orange focus
                         OutlinedTextField(
                             value = phone,
                             onValueChange = { phone = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Phone Number", color = GrayText) },
                             leadingIcon = {
-                                Icon(Icons.Default.Phone, contentDescription = null, tint = PrimaryBlue)
+                                Icon(Icons.Default.Phone, contentDescription = null, tint = PrimaryOrange)
                             },
                             placeholder = { Text("+880 1XXX-XXXXXX", color = GrayText) },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             textStyle = TextStyle.Default.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 unfocusedLabelColor = GrayText,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
@@ -232,13 +236,14 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Password Field - Orange focus
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Password", color = GrayText) },
                             leadingIcon = {
-                                Icon(Icons.Default.Lock, contentDescription = null, tint = PrimaryBlue)
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = PrimaryOrange)
                             },
                             trailingIcon = {
                                 IconButton(onClick = { showPassword = !showPassword }) {
@@ -254,11 +259,11 @@ fun SignupScreen(navController: NavController) {
                             shape = RoundedCornerShape(16.dp),
                             textStyle = TextStyle.Default.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
                             )
@@ -266,13 +271,14 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Confirm Password Field - Orange focus
                         OutlinedTextField(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Confirm Password", color = GrayText) },
                             leadingIcon = {
-                                Icon(Icons.Default.LockReset, contentDescription = null, tint = PrimaryBlue)
+                                Icon(Icons.Default.LockReset, contentDescription = null, tint = PrimaryOrange)
                             },
                             trailingIcon = {
                                 IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
@@ -288,11 +294,11 @@ fun SignupScreen(navController: NavController) {
                             shape = RoundedCornerShape(16.dp),
                             textStyle = TextStyle.Default.copy(color = BlackText),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryBlue,
+                                focusedBorderColor = PrimaryOrange,
                                 unfocusedBorderColor = LightGray,
                                 focusedContainerColor = White,
                                 unfocusedContainerColor = White,
-                                focusedLabelColor = PrimaryBlue,
+                                focusedLabelColor = PrimaryOrange,
                                 focusedTextColor = BlackText,
                                 unfocusedTextColor = BlackText
                             )
@@ -300,6 +306,7 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(28.dp))
 
+                        // Terms text - Orange links
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
@@ -312,7 +319,7 @@ fun SignupScreen(navController: NavController) {
                             Text(
                                 text = "Terms",
                                 fontSize = 11.sp,
-                                color = Orange,
+                                color = PrimaryOrange,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
@@ -323,13 +330,14 @@ fun SignupScreen(navController: NavController) {
                             Text(
                                 text = "Privacy Policy",
                                 fontSize = 11.sp,
-                                color = Orange,
+                                color = PrimaryOrange,
                                 fontWeight = FontWeight.Medium
                             )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Sign Up Button - Orange
                         Button(
                             onClick = {
                                 when {
@@ -421,8 +429,8 @@ fun SignupScreen(navController: NavController) {
                                 .height(56.dp),
                             shape = RoundedCornerShape(18.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryBlue,
-                                disabledContainerColor = PrimaryBlue.copy(alpha = 0.6f)
+                                containerColor = PrimaryOrange,
+                                disabledContainerColor = PrimaryOrange.copy(alpha = 0.6f)
                             ),
                             enabled = !isLoading
                         ) {
@@ -451,6 +459,7 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // Divider
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -475,6 +484,7 @@ fun SignupScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
+                        // Login Link - Orange
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -485,7 +495,7 @@ fun SignupScreen(navController: NavController) {
                             )
                             Text(
                                 text = "Login",
-                                color = Orange,
+                                color = PrimaryOrange,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 modifier = Modifier.clickable {
@@ -501,6 +511,7 @@ fun SignupScreen(navController: NavController) {
         }
     }
 
+    // Verification Dialog - Orange theme
     if (showVerificationDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -514,7 +525,7 @@ fun SignupScreen(navController: NavController) {
                     text = "Verify Your Email",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
+                    color = PrimaryOrange
                 )
             },
             text = {
@@ -548,7 +559,7 @@ fun SignupScreen(navController: NavController) {
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = PrimaryBlue
+                        contentColor = PrimaryOrange
                     )
                 ) {
                     Text("Go to Login", fontWeight = FontWeight.Bold)
@@ -617,7 +628,7 @@ fun SignupServiceCircle(
         modifier = Modifier
             .size(70.dp)
             .clip(CircleShape),
-        color = LightBlue,
+        color = LightOrange,
         shadowElevation = 2.dp
     ) {
         Column(
@@ -630,7 +641,7 @@ fun SignupServiceCircle(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = PrimaryBlue,
+                tint = PrimaryOrange,
                 modifier = Modifier.size(26.dp)
             )
             Text(
