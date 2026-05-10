@@ -56,7 +56,7 @@ data class Provider(
     val isTopRated: Boolean = false,
     val workerId: String = "",
     val categoryId: Int = 0,
-    val profileImageBase64: String = ""  // প্রোফাইল ছবির জন্য ফিল্ড
+    val profileImageBase64: String = ""
 )
 
 // Sample Data
@@ -565,7 +565,7 @@ fun ProviderCardSmall(
             }
 
             Text(
-                text = "$${provider.pricePerHour}/hr",
+                text = "৳${provider.pricePerHour}/hr",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = OrangePrimary,
@@ -663,7 +663,7 @@ fun HomeHeader(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (unreadNotificationCount > 9) "9+" else unreadNotificationCount.toString(),
+                                text = if (unreadNotificationCount > 99) "99+" else unreadNotificationCount.toString(),
                                 fontSize = 9.sp,
                                 color = White,
                                 fontWeight = FontWeight.Bold
@@ -785,8 +785,8 @@ fun SearchBarSection(query: String, onChange: (String) -> Unit, modifier: Modifi
             unfocusedBorderColor = Color(0xFFE8E8E8),
             focusedContainerColor = White,
             unfocusedContainerColor = White,
-            focusedTextColor = Color.Black,      // When text field is focused
-            unfocusedTextColor = Color.Black     // When text field is unfocused
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
         ),
         singleLine = true
     )
